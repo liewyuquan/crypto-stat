@@ -1,0 +1,147 @@
+rm(list=ls())
+library(zoo)
+library(xts)
+library(TTR)
+library(quantmod)
+library(ggplot2)
+
+# set date
+d <- as.POSIXlt(as.Date(Sys.Date()))
+dyear <- d
+dyear$year <- dyear$year-1
+
+# get data from Yahoo for stock
+data <- getSymbols('TSLA',
+                   src='yahoo',
+                   #from=dyear,
+                   #to=d,
+                   autoassign=FALSE)
+TSLA
+
+na.omit(TSLA)
+
+# data preview
+head(TSLA)
+
+tail(TSLA)
+
+summary(TSLA)
+
+TSLA
+
+# barChart
+
+barChart(TSLA)
+
+# plot price within 1 year with 3 months mark
+ggplot(TSLA, aes(x=index(TSLA),
+                 y=TSLA[,6])) + 
+  geom_line(color='darkblue') + 
+  ggtitle('TSLA daily prices series') + 
+  xlab('Date')+ylab('Price') + 
+  theme(plot.title=element_text(hjust=0.5)) +
+  scale_x_date(date_labels='%b %y',
+               date_breaks='3 months')
+
+# plot 10 days and 30 days moving average
+TSLA_mm <- subset(TSLA, index(TSLA)>=dyear)
+
+TSLA_mm10 <- rollmean(TSLA_mm[,6], 10,
+                      fill=list(NA,NULL,NA),
+                      alight='right')
+
+TSLA_mm30 <- rollmean(TSLA_mm[,6], 30,
+                      fill=list(NA,NULL,NA),
+                      alight='right')
+
+TSLA_mm$mm10 <- coredata(TSLA_mm10)
+TSLA_mm$mm30 <- coredata(TSLA_mm30)
+
+ggplot(TSLA_mm, aes(x=index(TSLA_mm))) + 
+  geom_line(aes(y=TSLA_mm[,6], color='TSLA')) +
+  ggtitle('TSLA prices series') +
+  geom_line(aes(y=TSLA_mm$mm10, color='MM10')) +
+  geom_line(aes(y=TSLA_mm$mm30, color='MM30')) +
+  xlab('Date') + 
+  ylab('Price') +
+  theme(plot.title=element_text(hjust=0.5),
+        panel.border = element_blank()) + 
+  scale_x_date(date_labels='%b %y', 
+               date_breaks='3 months') +
+  scale_color_manual('Series', values=c('TSLA'='gray40',
+                                        'MM10'='firebrick4',
+                                        'MM30'='darkcyan'))
+
+
+# seasonality
+TSLA_ret <- diff(log(TSLA[,6]))
+TSLA_ret <- TSLA_ret[-1,]
+TSLA_ret
+
+op <- function(stock) {
+  return(stock[,1])
+}
+
+cl <- function(stock) {
+  return(stock[,4])
+}
+
+op(TSLA)
+cl(TSLA)
+
+# up/down
+TSLA_diffperc <- (op(TSLA) - cl(TSLA))/op(TSLA)
+
+# built-in function
+tail(dailyReturn(TSLA))
+
+tail(weeklyReturn(TSLA))
+
+tail(monthlyReturn(TSLA))
+
+tail(quarterlyReturn(TSLA))
+
+tail(yearlyReturn(TSLA))
+
+# 6 months returns graph
+ggplot(TSLA_ret, aes(x=index(TSLA_ret), y=TSLA_ret)) +
+  geom_line(color='deepskyblue4') +
+  ggtitle('TSLA returns series') +
+  xlab('Date') +
+  ylab('Return') +
+  theme(plot.title=element_text(hjust=0.5)) +
+  scale_x_date(date_labels='%b %y', date_breaks='6 months')
+
+
+# stock return from 2021
+TSLA_ret_2021 <- subset(TSLA_ret, index(TSLA_ret)>'2021-01-01')
+ggplot(TSLA_ret_2021, aes(x=index(TSLA_ret_2021), y=TSLA_ret_2021)) +
+  geom_line(color='deepskyblue4') +
+  ggtitle('TSLA returns in 2021') +
+  xlab('Date') +
+  ylab('Return') +
+  theme(plot.title=element_text(hjust=0.5)) +
+  scale_x_date(date_labels='%b %y', date_breaks='1 months')
+
+
+#
+chartSeries(TSLA_ret, subset='last 12 months', type=1)
+addBBands()
+
+library(tseries, quietly=T)  
+adf.test(TSLA$TSLA.Adjusted)
+ret_TSLA <- 100*diff(log(TSLA$TSLA.Adjusted))
+
+library(forecast, quietly=T)  
+TSLA_ret_train <- ret_TSLA[1:(0.9*length(ret_TSLA))]
+TSLA_ret_test <- ret_TSLA[(0.9*length(ret_TSLA)):length(ret_TSLA)]
+
+fit <- arima(TSLA_ret_train, order=c(2,0,2))
+
+preds <- predict(fit, n.ahead=(length(ret_TSLA)-(0.9*length(ret_TSLA))))$pred
+
+test_forecast <- forecast(fit, h=25)
+
+plot(test_forecast, main='Arima forecast for TSLA stock')
+
+test_forecast
