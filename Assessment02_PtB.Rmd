@@ -31,9 +31,6 @@ data <- getSymbols(c(coin_portfolio,
                    autoassign=FALSE)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
 ```{r BitCoin, echo=FALSE}
 dataBTC = data.frame(date=index(`BTC-USD`), coredata(`BTC-USD`))
 dataBTC
@@ -42,6 +39,7 @@ dataBTC
 dataTSLA = data.frame(date=index(TSLA), coredata(TSLA))
 dataTSLA
 ```
+
 ```{r BTCTSLA_fill, echo=FALSE}
 library(tidyr)
 # use Friday's data for weekends
@@ -71,13 +69,30 @@ for (i in lag_list){
 }
 df_lag
 ```
+
 ```{r lagdata merge, echo=FALSE}
 df_lag_m <- cbind(mdBTCTSLA_sub, df_lag)
 df_lag_m
 ```
 
+
 ```{r lm model, echo=FALSE}
 library(ggplot2)
+library(ggfortify)
+x_value = log(df_lag_m$BTC.USD.Close)
+y_value = df_lag_m$TSLA_price_lag_1
+fit=lm(data = df_lag_m, x_value~y_value)
+summary(fit)
+ggplot(df_lag_m, aes(x = x_value, y = y_value)) +
+  geom_point() +
+  stat_smooth(method = 'lm', col = 'red') + 
+  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
+                     " Intercept = ",signif(fit$coef[[1]],5 ),
+                     " Slope =",signif(fit$coef[[2]], 5),
+                     " P =",signif(summary(fit)$coef[2,4], 5)))
+autoplot(fit)
+```
+```{r lm model log, echo=FALSE}
 x_value = df_lag_m$BTC.USD.Close
 y_value = df_lag_m$TSLA_price_lag_100
 fit=lm(data = df_lag_m, x_value~y_value)
@@ -89,8 +104,5 @@ ggplot(df_lag_m, aes(x = x_value, y = y_value)) +
                      " Intercept = ",signif(fit$coef[[1]],5 ),
                      " Slope =",signif(fit$coef[[2]], 5),
                      " P =",signif(summary(fit)$coef[2,4], 5)))
-```
-```{r autoplot, echo=FALSE}
-library(ggfortify)
 autoplot(fit)
 ```
