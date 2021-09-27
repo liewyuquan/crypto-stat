@@ -76,9 +76,14 @@ df_lag_m
 ```
 
 ```{r return data, echo=FALSE, message=FALSE}
-DReturn <- c(NA,diff(df_lag_m$BTC.USD.Close)/df_lag_m$BTC.USD.Close*100)
-DReturn <- DReturn[-length(DReturn)]
-df_lag_m$BTC_USD_Day_Return <- DReturn
+# Bitcoin daily return
+BDReturn <- c(NA,diff(df_lag_m$BTC.USD.Close)/df_lag_m$BTC.USD.Close*100)
+BDReturn <- BDReturn[-length(BDReturn)]
+df_lag_m$BTC_USD_Day_Return <- BDReturn
+# TSLA daily return
+TDReturn <- c(NA,diff(df_lag_m$TSLA.Close)/df_lag_m$TSLA.Close*100)
+TDReturn <- TDReturn[-length(TDReturn)]
+df_lag_m$TSLA_price_Day_Return <- TDReturn
 df_lag_m
 ```
 
@@ -98,9 +103,25 @@ ggplot(df_lag_m, aes(x = x_value, y = y_value)) +
                      " P =",signif(summary(fit)$coef[2,4], 5)))
 autoplot(fit)
 ```
+
 ```{r lm model log, echo=FALSE}
 x_value = df_lag_m$BTC.USD.Close
 y_value = df_lag_m$TSLA_price_lag_100
+fit=lm(data = df_lag_m, x_value~y_value)
+summary(fit)
+ggplot(df_lag_m, aes(x = x_value, y = y_value)) +
+  geom_point() +
+  stat_smooth(method = 'lm', col = 'red') + 
+  labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
+                     " Intercept = ",signif(fit$coef[[1]],5 ),
+                     " Slope =",signif(fit$coef[[2]], 5),
+                     " P =",signif(summary(fit)$coef[2,4], 5)))
+autoplot(fit)
+```
+
+```{r lm model log, echo=FALSE}
+x_value = df_lag_m$BTC_USD_Day_Return
+y_value = df_lag_m$TSLA_price_Day_Return
 fit=lm(data = df_lag_m, x_value~y_value)
 summary(fit)
 ggplot(df_lag_m, aes(x = x_value, y = y_value)) +
