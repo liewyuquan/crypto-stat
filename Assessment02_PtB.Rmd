@@ -78,16 +78,11 @@ df_lag_m
 
 ```{r lm model, echo=FALSE}
 library(ggplot2)
-#fit=lm(data = df_lag_m, BTC.USD.Close~TSLA.Close)
-fit=lm(data = df_lag_m, log(BTC.USD.Close)~TSLA_price_lag_1)
-#fit=lm(data = df_lag_m, BTC.USD.Close~TSLA_price_lag_3)
-#fit=lm(data = df_lag_m, BTC.USD.Close~TSLA_price_lag_5)
-#fit=lm(data = df_lag_m, BTC.USD.Close~TSLA_price_lag_10)
-#fit=lm(data = df_lag_m, BTC.USD.Close~TSLA_price_lag_20)
-#fit=lm(data = df_lag_m, BTC.USD.Close~TSLA_price_lag_30)
-#fit=lm(data = df_lag_m, BTC.USD.Close~TSLA_price_lag_100)
+x_value = df_lag_m$BTC.USD.Close
+y_value = df_lag_m$TSLA_price_lag_100
+fit=lm(data = df_lag_m, x_value~y_value)
 summary(fit)
-ggplot(df_lag_m, aes(x = BTC.USD.Close, y = TSLA_price_lag_1)) +
+ggplot(df_lag_m, aes(x = x_value, y = y_value)) +
   geom_point() +
   stat_smooth(method = 'lm', col = 'red') + 
   labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
