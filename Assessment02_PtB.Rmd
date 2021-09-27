@@ -75,6 +75,12 @@ df_lag_m <- cbind(mdBTCTSLA_sub, df_lag)
 df_lag_m
 ```
 
+```{r return data, echo=FALSE, message=FALSE}
+DReturn <- c(NA,diff(df_lag_m$BTC.USD.Close)/df_lag_m$BTC.USD.Close*100)
+DReturn <- DReturn[-length(DReturn)]
+df_lag_m$BTC_USD_Day_Return <- DReturn
+df_lag_m
+```
 
 ```{r lm model, echo=FALSE}
 library(ggplot2)
