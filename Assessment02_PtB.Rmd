@@ -157,12 +157,13 @@ summary(fit1)
 ggplot(df_BTCTSLA_lag_m, aes(x = x_value1, y = y_value1)) +
   geom_point() +
   stat_smooth(method = 'lm', col = 'red') + 
-  labs(title = paste("Adj R2 = ", signif(summary(fit1)$adj.r.squared, 5),
-                     " Intercept = ", signif(fit1$coef[[1]], 5),
-                     " Slope =", signif(fit1$coef[[2]], 5),
-                     " P =", signif(summary(fit1)$coef[2,4], 5)))
-# Relative Standard Error
-sigma(fit1)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)
+  labs(title = paste("Adj R2=", signif(summary(fit1)$adj.r.squared, 5),
+                     "Inc=", signif(fit1$coef[[1]], 5),
+                     "Slp=", signif(fit1$coef[[2]], 5),
+                     #"P=", signif(summary(fit1)$coef[2,4], 5),
+                     "RSE=", sigma(fit1)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)))
+```
+```{r lm_model_plots, echo=TRUE, warning=FALSE}
 autoplot(fit1)
 ```
 
@@ -175,12 +176,13 @@ summary(fit2)
 ggplot(df_BTCTSLA_lag_m, aes(x = x_value2, y = y_value2)) +
   geom_point() +
   stat_smooth(method = 'lm', col = 'red') + 
-  labs(title = paste("Adj R2 = ", signif(summary(fit2)$adj.r.squared, 5),
-                     " Intercept = ", signif(fit2$coef[[1]], 5),
-                     " Slope =", signif(fit2$coef[[2]], 5),
-                     " P =", signif(summary(fit2)$coef[2,4], 5)))
-# Relative Standard Error
-sigma(fit2)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)
+  labs(title = paste("Adj R2=", signif(summary(fit2)$adj.r.squared, 5),
+                     "Inc=", signif(fit2$coef[[1]], 5),
+                     "Slp=", signif(fit2$coef[[2]], 5),
+                     #"P=", signif(summary(fit2)$coef[2,4], 5)
+                     "RSE=", sigma(fit2)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)))
+```
+```{r lm_model_log_plots, echo=TRUE, warning=FALSE}
 autoplot(fit2)
 ```
 
@@ -192,12 +194,13 @@ summary(fit3)
 ggplot(df_BTCTSLA_lag_m, aes(x = x_value3, y = y_value3)) +
   geom_point() +
   stat_smooth(method = 'lm', col = 'red') + 
-  labs(title = paste("Adj R2 = ", signif(summary(fit3)$adj.r.squared, 5),
-                     " Intercept = ", signif(fit3$coef[[1]], 5),
-                     " Slope =", signif(fit3$coef[[2]], 5),
-                     " P =", signif(summary(fit3)$coef[2,4], 5)))
-# Relative Standard Error
-sigma(fit3)/mean(df_BTCTSLA_lag_m$BTC_USD_Day_Return, na.rm=TRUE)
+  labs(title = paste("Adj R2=", signif(summary(fit3)$adj.r.squared, 5),
+                     "Inc=", signif(fit3$coef[[1]], 5),
+                     "Slp=", signif(fit3$coef[[2]], 5),
+                     #"P=", signif(summary(fit3)$coef[2,4], 5),
+                     "RSE=", sigma(fit3)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)))
+```
+```{r lm_model_return_plots, echo=TRUE, warning=FALSE}
 autoplot(fit3)
 ```
 
@@ -278,6 +281,8 @@ m_fit_adjusted <- lm(`BTC.USD.Close` ~
                        `GC.F.Close`,
                      data = df_port)
 summary(m_fit_adjusted)
+# R squared
+signif(summary(m_fit_adjusted)$adj.r.squared, 5)
 # Relative Standard Error
 sigma(m_fit_adjusted)/mean(df_port$BTC.USD.Close, na.rm=TRUE)
 ```
@@ -288,6 +293,8 @@ m_fit_adjusted_filtered <- lm(`BTC.USD.Close` ~
                                 `DOGE.USD.Close`,
                               data = df_port)
 summary(m_fit_adjusted_filtered)
+# R squared
+signif(summary(m_fit_adjusted_filtered)$adj.r.squared, 5)
 # Relative Standard Error
 sigma(m_fit_adjusted_filtered)/mean(df_port$BTC.USD.Close, na.rm=TRUE)
 ```
