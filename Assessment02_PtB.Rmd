@@ -212,7 +212,8 @@ autoplot(fit3)
 ```{r correlation_matrix, warning=FALSE}
 library(corrplot)
 df_BTCTSLA_cor <- cor(subset(df_BTCTSLA_lag_m, select = -c(date)), use="pairwise.complete.obs")
-corrplot(df_BTCTSLA_cor, method="circle")
+corrplot(df_BTCTSLA_cor, method="pie")
+corrplot(df_BTCTSLA_cor, method="number")
 ```
 
 ```{r others}
