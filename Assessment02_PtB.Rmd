@@ -146,7 +146,7 @@ TDReturn <- TDReturn[-length(TDReturn)]
 df_BTCTSLA_lag_m$TSLA_price_Day_Return <- TDReturn
 ```
 
-```{r lm_model, echo=TRUE, warning=FALSE}
+```{r lm_model_log, echo=TRUE, warning=FALSE}
 library(ggplot2)
 library(ggfortify)
 # Best result at 90 lag days -- log(y) ~ x
@@ -156,6 +156,8 @@ fit1 = lm(data = df_BTCTSLA_lag_m, y_value1 ~ x_value1)
 summary(fit1)
 ggplot(df_BTCTSLA_lag_m, aes(x = x_value1, y = y_value1)) +
   geom_point() +
+  xlab("TSLA 90 days lag") + 
+  ylab("log(Bitcoin closing)") + 
   stat_smooth(method = 'lm', col = 'red') + 
   labs(title = paste("Adj R2=", signif(summary(fit1)$adj.r.squared, 5),
                      "Inc=", signif(fit1$coef[[1]], 5),
@@ -163,11 +165,11 @@ ggplot(df_BTCTSLA_lag_m, aes(x = x_value1, y = y_value1)) +
                      #"P=", signif(summary(fit1)$coef[2,4], 5),
                      "RSE=", sigma(fit1)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)))
 ```
-```{r lm_model_plots, echo=TRUE, warning=FALSE}
+```{r lm_model_log_plots, echo=TRUE, warning=FALSE}
 autoplot(fit1)
 ```
 
-```{r lm_model_log, echo=TRUE, warning=FALSE}
+```{r lm_model, echo=TRUE, warning=FALSE}
 # Best result at 60 days -- y ~ x
 x_value2 = df_BTCTSLA_lag_m$TSLA_price_lag_60
 y_value2 = df_BTCTSLA_lag_m$BTC.USD.Close
@@ -175,6 +177,8 @@ fit2 = lm(data = df_BTCTSLA_lag_m, y_value2 ~ x_value2)
 summary(fit2)
 ggplot(df_BTCTSLA_lag_m, aes(x = x_value2, y = y_value2)) +
   geom_point() +
+  xlab("TSLA 60 days lag") + 
+  ylab("Bitcoin closing") + 
   stat_smooth(method = 'lm', col = 'red') + 
   labs(title = paste("Adj R2=", signif(summary(fit2)$adj.r.squared, 5),
                      "Inc=", signif(fit2$coef[[1]], 5),
@@ -182,7 +186,7 @@ ggplot(df_BTCTSLA_lag_m, aes(x = x_value2, y = y_value2)) +
                      #"P=", signif(summary(fit2)$coef[2,4], 5)
                      "RSE=", sigma(fit2)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)))
 ```
-```{r lm_model_log_plots, echo=TRUE, warning=FALSE}
+```{r lm_model_plots, echo=TRUE, warning=FALSE}
 autoplot(fit2)
 ```
 
@@ -193,6 +197,8 @@ fit3 = lm(data = df_BTCTSLA_lag_m, y_value3 ~ x_value3)
 summary(fit3)
 ggplot(df_BTCTSLA_lag_m, aes(x = x_value3, y = y_value3)) +
   geom_point() +
+  xlab("TSLA return") + 
+  ylab("Bitcoin return") + 
   stat_smooth(method = 'lm', col = 'red') + 
   labs(title = paste("Adj R2=", signif(summary(fit3)$adj.r.squared, 5),
                      "Inc=", signif(fit3$coef[[1]], 5),
@@ -297,4 +303,33 @@ summary(m_fit_adjusted_filtered)
 signif(summary(m_fit_adjusted_filtered)$adj.r.squared, 5)
 # Relative Standard Error
 sigma(m_fit_adjusted_filtered)/mean(df_port$BTC.USD.Close, na.rm=TRUE)
+```
+
+
+```{r SLR_sets}
+df_port_training <- df_port %>% slice(1:(length(df_port$BTC.USD.Close)*0.7))
+df_port_training
+df_port_test <- df_port %>% slice(ceiling(length(df_port$BTC.USD.Close)*0.7):length(df_port$BTC.USD.Close))
+df_port_test
+```
+
+```{r SLR_sampling}
+# sampling from training and test sets with 80% relative of their sets
+trainset_size <- floor(0.8 * nrow(df_port_training))
+testset_size <- floor(0.8 * nrow(df_port_test))
+set.seed(2)
+trainset_indices <- sample(seq_len(nrow(df_port_training)), size = trainset_size)
+testset_indices <- sample(seq_len(nrow(df_port_test)), size = testset_size)
+trainset <- df_port_training[trainset_indices, ]
+testset <- df_port_test[testset_indices, ]
+```
+
+```{r SLR_TSLA_modelling}
+lm_TSLA = lm(formula = BTC.USD.Close ~ TSLA.Close, data = trainset)
+summary(lm_TSLA)
+```
+
+```{r SLR_TSLA_test}
+# Relative Standard Error
+sigma(lm_TSLA)/mean(testset$BTC.USD.Close, na.rm=TRUE)
 ```
