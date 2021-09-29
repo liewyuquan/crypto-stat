@@ -150,7 +150,7 @@ df_BTCTSLA_lag_m$TSLA_Return <- TDReturn
 library(ggplot2)
 library(ggfortify)
 # Best result at 90 lag days -- log(y) ~ x
-x_value1 = df_BTCTSLA_lag_m$TSLA_price_lag_90
+x_value1 = df_BTCTSLA_lag_m$TSLA_lag_90
 y_value1 = log(df_BTCTSLA_lag_m$BTC.USD.Close)
 fit1 = lm(data = df_BTCTSLA_lag_m, y_value1 ~ x_value1)
 summary(fit1)
@@ -171,7 +171,7 @@ autoplot(fit1)
 
 ```{r lm_model, echo=TRUE, warning=FALSE}
 # Best result at 60 days -- y ~ x
-x_value2 = df_BTCTSLA_lag_m$TSLA_price_lag_60
+x_value2 = df_BTCTSLA_lag_m$TSLA_lag_60
 y_value2 = df_BTCTSLA_lag_m$BTC.USD.Close
 fit2 = lm(data = df_BTCTSLA_lag_m, y_value2 ~ x_value2)
 summary(fit2)
@@ -311,7 +311,6 @@ signif(summary(m_fit_adjusted_filtered)$adj.r.squared, 5)
 df_port_training <- df_port %>% slice(1:(length(df_port$BTC.USD.Close)*0.7))
 df_port_training
 df_port_test <- df_port %>% slice(ceiling(length(df_port$BTC.USD.Close)*0.7):length(df_port$BTC.USD.Close))
-df_port_test
 ```
 
 ```{r SLR_sampling}
@@ -332,10 +331,10 @@ summary(lm_TSLA)
 
 ```{r SLR_TSLA_RSE}
 # Residual Standard Error
-sigma(lm_TSLA)/mean(testset$BTC.USD.Close, na.rm=TRUE)
+sigma(lm_TSLA)/mean(trainset$BTC.USD.Close, na.rm=TRUE)
 ```
 
 ```{r SLR_TSLA_RMSE}
 library(Metrics)
-rmse(predict)
+
 ```
