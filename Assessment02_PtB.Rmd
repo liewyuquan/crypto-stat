@@ -119,14 +119,14 @@ row.names(df_BTCTSLA_sub) <- NULL
 
 ```{r lag_data, message=FALSE, warning=FALSE}
 library(dplyr)
-lag_list = c(1, 3, 5, 10, 20, 30, 50, 60, 90, 100)
+lag_list = c(1, 3, 5, 10, 30, 60, 90)
 for (i in lag_list){
   if (i == lag_list[1]) {
     df_BTCTSLA_lag = data.frame(col1 = lag(df_BTCTSLA_sub$TSLA.Close, n = i))
-    names(df_BTCTSLA_lag)[ncol(df_BTCTSLA_lag)] <- paste0("TSLA_price_lag_", i)
+    names(df_BTCTSLA_lag)[ncol(df_BTCTSLA_lag)] <- paste0("TSLA_lag_", i)
   } else {
     df_BTCTSLA_lag[,ncol(df_BTCTSLA_lag)+1] <- lag(df_BTCTSLA_sub$TSLA.Close, n = i)
-    names(df_BTCTSLA_lag)[ncol(df_BTCTSLA_lag)] <- paste0("TSLA_price_lag_", i)
+    names(df_BTCTSLA_lag)[ncol(df_BTCTSLA_lag)] <- paste0("TSLA_lag_", i)
   }
 }
 ```
@@ -139,11 +139,11 @@ df_BTCTSLA_lag_m <- cbind(df_BTCTSLA_sub, df_BTCTSLA_lag)
 # Bitcoin daily return
 BDReturn <- c(NA, diff(df_BTCTSLA_lag_m$BTC.USD.Close)/df_BTCTSLA_lag_m$BTC.USD.Close*100)
 BDReturn <- BDReturn[-length(BDReturn)]
-df_BTCTSLA_lag_m$BTC_USD_Day_Return <- BDReturn
+df_BTCTSLA_lag_m$BTC_Return <- BDReturn
 # TSLA daily return
 TDReturn <- c(NA, diff(df_BTCTSLA_lag_m$TSLA.Close)/df_BTCTSLA_lag_m$TSLA.Close*100)
 TDReturn <- TDReturn[-length(TDReturn)]
-df_BTCTSLA_lag_m$TSLA_price_Day_Return <- TDReturn
+df_BTCTSLA_lag_m$TSLA_Return <- TDReturn
 ```
 
 ```{r lm_model_log, echo=TRUE, warning=FALSE}
@@ -191,8 +191,8 @@ autoplot(fit2)
 ```
 
 ```{r lm_model_return, echo=TRUE, warning=FALSE}
-x_value3 = df_BTCTSLA_lag_m$TSLA_price_Day_Return
-y_value3 = df_BTCTSLA_lag_m$BTC_USD_Day_Return
+x_value3 = df_BTCTSLA_lag_m$TSLA_Return
+y_value3 = df_BTCTSLA_lag_m$BTC_Return
 fit3 = lm(data = df_BTCTSLA_lag_m, y_value3 ~ x_value3)
 summary(fit3)
 ggplot(df_BTCTSLA_lag_m, aes(x = x_value3, y = y_value3)) +
@@ -208,6 +208,11 @@ ggplot(df_BTCTSLA_lag_m, aes(x = x_value3, y = y_value3)) +
 ```
 ```{r lm_model_return_plots, echo=TRUE, warning=FALSE}
 autoplot(fit3)
+```
+```{r correlation_matrix, warning=FALSE}
+library(corrplot)
+df_BTCTSLA_cor <- cor(subset(df_BTCTSLA_lag_m, select = -c(date)), use="pairwise.complete.obs")
+corrplot(df_BTCTSLA_cor, method="circle")
 ```
 
 ```{r others}
@@ -289,8 +294,6 @@ m_fit_adjusted <- lm(`BTC.USD.Close` ~
 summary(m_fit_adjusted)
 # R squared
 signif(summary(m_fit_adjusted)$adj.r.squared, 5)
-# Relative Standard Error
-sigma(m_fit_adjusted)/mean(df_port$BTC.USD.Close, na.rm=TRUE)
 ```
 ```{r multi_linear_stars_f}
 m_fit_adjusted_filtered <- lm(`BTC.USD.Close` ~ 
@@ -301,8 +304,6 @@ m_fit_adjusted_filtered <- lm(`BTC.USD.Close` ~
 summary(m_fit_adjusted_filtered)
 # R squared
 signif(summary(m_fit_adjusted_filtered)$adj.r.squared, 5)
-# Relative Standard Error
-sigma(m_fit_adjusted_filtered)/mean(df_port$BTC.USD.Close, na.rm=TRUE)
 ```
 
 
@@ -329,7 +330,12 @@ lm_TSLA = lm(formula = BTC.USD.Close ~ TSLA.Close, data = trainset)
 summary(lm_TSLA)
 ```
 
-```{r SLR_TSLA_test}
-# Relative Standard Error
+```{r SLR_TSLA_RSE}
+# Residual Standard Error
 sigma(lm_TSLA)/mean(testset$BTC.USD.Close, na.rm=TRUE)
+```
+
+```{r SLR_TSLA_RMSE}
+library(Metrics)
+rmse(predict)
 ```
