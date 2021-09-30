@@ -108,7 +108,7 @@ fill(TSLA.Open,TSLA.High,TSLA.Low,TSLA.Close,TSLA.Adjusted,TSLA.Volume)
 ```{r 2019, message=FALSE, warning=FALSE}
 # subset data (2019, close price and volume)
 df_BTCTSLA_sub <- subset(df_BTCTSLA_filled,
-                         date >= '2019-01-01',
+                         #date >= '2019-01-01',
                          select = c(date,
                                     TSLA.Close,
                                     TSLA.Volume,
@@ -242,7 +242,7 @@ df_port = merge(df_port, df_stock, by = 'date', all.x = TRUE)
 
 # subset 2019
 df_port <- subset(df_port,
-                  date >= '2019-01-01',
+                  #date >= '2019-01-01',
                   select = c(date, 
                              BTC.USD.Close, 
                              BTC.USD.Volume,
@@ -274,8 +274,33 @@ df_port <- subset(df_port,
                              AMD.Volume,
                              TSM.Close, 
                              TSM.Volume
-                             ))
+                             )
+                  )
 row.names(df_port) <- NULL
+
+
+df_port_price <- subset(df_port,
+                        select = c(date, 
+                                   BTC.USD.Close, 
+                                   ETH.USD.Close, 
+                                   ADA.USD.Close, 
+                                   DOGE.USD.Close, 
+                                   SHIB.USD.Close, 
+                                   DJI.Close,                            
+                                   IXIC.Close, 
+                                   GSPC.Close, 
+                                   GC.F.Close, 
+                                   TSLA.Close, 
+                                   GOOG.Close, 
+                                   AAPL.Close, 
+                                   NVDA.Close, 
+                                   AMD.Close, 
+                                   TSM.Close
+                                   )
+                        )
+
+df_port_price_cor <- cor(subset(df_port_price, select = -c(date)), use="pairwise.complete.obs")
+corrplot(df_port_price_cor, method="number")
 ```
 
 ```{r multi_linear}
@@ -307,22 +332,18 @@ summary(m_fit_adjusted_filtered)
 signif(summary(m_fit_adjusted_filtered)$adj.r.squared, 5)
 ```
 
-
-```{r SLR_sets}
-df_port_training <- df_port %>% slice(1:(length(df_port$BTC.USD.Close)*0.7))
-df_port_training
-df_port_test <- df_port %>% slice(ceiling(length(df_port$BTC.USD.Close)*0.7):length(df_port$BTC.USD.Close))
-```
-
 ```{r SLR_sampling}
-# sampling from training and test sets with 80% relative of their sets
-trainset_size <- floor(0.8 * nrow(df_port_training))
-testset_size <- floor(0.8 * nrow(df_port_test))
+# sampling train, validation and test sets
+trainset_size <- floor(0.7 * nrow(df_port))
+validation_size <- floor(0.1 * nrow(df_port))
+testset_size <- floor(0.2 * nrow(df_port))
 set.seed(2)
-trainset_indices <- sample(seq_len(nrow(df_port_training)), size = trainset_size)
-testset_indices <- sample(seq_len(nrow(df_port_test)), size = testset_size)
-trainset <- df_port_training[trainset_indices, ]
-testset <- df_port_test[testset_indices, ]
+trainset_indices <- sample(seq_len(nrow(df_port)), size = trainset_size)
+trainset <- df_port[trainset_indices, ]
+df_set <- df_port[-trainset_indices, ]
+test_indices <- sample(seq_len(nrow(df_set)), size = testset_size)
+testset <- df_set[testset_indices, ]
+validationset <- df_set[-test_indices,]
 ```
 
 ```{r SLR_TSLA_modelling}
@@ -330,12 +351,48 @@ lm_TSLA = lm(formula = BTC.USD.Close ~ TSLA.Close, data = trainset)
 summary(lm_TSLA)
 ```
 
-```{r SLR_TSLA_RSE}
-# Residual Standard Error
-sigma(lm_TSLA)/mean(trainset$BTC.USD.Close, na.rm=TRUE)
+```{r stepwise_leaps}
+library(leaps)
+models <- regsubsets(BTC.USD.Close ~., data = df_port, nvmax = 5,
+                     method = "seqrep")
+summary(models)
 ```
 
-```{r SLR_TSLA_RMSE}
-library(Metrics)
+```{r stepwise_caret}
+library(caret)
+train.control <- trainControl(method = "cv", number = 10)
 
+step.model <- train(BTC.USD.Close ~., data = na.omit(df_port),
+                    method = "leapBackward", 
+                    tuneGrid = data.frame(nvmax = 1:5),
+                    trControl = train.control
+                    )
+step.model$results
+summary(step.model$finalModel)
+#step.model$bestTune
+coef(step.model$finalModel, 5)
 ```
+
+```{r stepwise_MASS}
+library(MASS)
+full.model <- lm(BTC.USD.Close ~., data = df_port)
+step.model <- stepAIC(full.model, direction = "both", 
+                      trace = FALSE)
+summary(step.model)
+```
+
+```{r stepwise_MASS_caret}
+# Train the model
+step.model <- train(BTC.USD.Close ~., data = na.omit(df_port),
+                    method = "lmStepAIC", 
+                    trControl = train.control,
+                    trace = FALSE
+                    )
+# Model accuracy
+step.model$results
+# Final model coefficients
+step.model$finalModel
+# Summary of the model
+summary(step.model$finalModel)
+```
+
