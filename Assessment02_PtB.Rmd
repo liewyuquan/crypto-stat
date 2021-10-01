@@ -119,7 +119,7 @@ row.names(df_BTCTSLA_sub) <- NULL
 
 ```{r lag_data, message=FALSE, warning=FALSE}
 library(dplyr)
-lag_list = c(1, 3, 5, 10, 30, 60, 90)
+lag_list = c(1, 2, 3, 4, 5, 6, 7)
 for (i in lag_list){
   if (i == lag_list[1]) {
     df_BTCTSLA_TDlag = data.frame(col1 = lag(df_BTCTSLA_sub$TSLA.Close, n = i))
@@ -150,7 +150,7 @@ df_BTCTSLA_TDlag_m$TSLA_Return <- TDReturn
 library(ggplot2)
 library(ggfortify)
 # Best result at 90 lag days -- log(y) ~ x
-x_value1 = df_BTCTSLA_TDlag_m$TSLA_TDlag_90
+x_value1 = df_BTCTSLA_TDlag_m$TSLA_TDlag_1
 y_value1 = log(df_BTCTSLA_TDlag_m$BTC.USD.Close)
 fit1 = lm(data = df_BTCTSLA_TDlag_m, y_value1 ~ x_value1)
 summary(fit1)
@@ -171,7 +171,7 @@ autoplot(fit1)
 
 ```{r lm_model, echo=TRUE, warning=FALSE}
 # Best result at 60 days -- y ~ x
-x_value2 = df_BTCTSLA_TDlag_m$TSLA_TDlag_60
+x_value2 = df_BTCTSLA_TDlag_m$TSLA_TDlag_1
 y_value2 = df_BTCTSLA_TDlag_m$BTC.USD.Close
 fit2 = lm(data = df_BTCTSLA_TDlag_m, y_value2 ~ x_value2)
 summary(fit2)
