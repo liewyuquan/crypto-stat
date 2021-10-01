@@ -122,48 +122,48 @@ library(dplyr)
 lag_list = c(1, 3, 5, 10, 30, 60, 90)
 for (i in lag_list){
   if (i == lag_list[1]) {
-    df_BTCTSLA_lag = data.frame(col1 = lag(df_BTCTSLA_sub$TSLA.Close, n = i))
-    names(df_BTCTSLA_lag)[ncol(df_BTCTSLA_lag)] <- paste0("TSLA_lag_", i)
+    df_BTCTSLA_TDlag = data.frame(col1 = lag(df_BTCTSLA_sub$TSLA.Close, n = i))
+    names(df_BTCTSLA_TDlag)[ncol(df_BTCTSLA_TDlag)] <- paste0("TSLA_TDlag_", i)
   } else {
-    df_BTCTSLA_lag[,ncol(df_BTCTSLA_lag)+1] <- lag(df_BTCTSLA_sub$TSLA.Close, n = i)
-    names(df_BTCTSLA_lag)[ncol(df_BTCTSLA_lag)] <- paste0("TSLA_lag_", i)
+    df_BTCTSLA_TDlag[,ncol(df_BTCTSLA_TDlag)+1] <- lag(df_BTCTSLA_sub$TSLA.Close, n = i)
+    names(df_BTCTSLA_TDlag)[ncol(df_BTCTSLA_TDlag)] <- paste0("TSLA_TDlag_", i)
   }
 }
 ```
 
 ```{r lag_data_merge, echo=TRUE}
-df_BTCTSLA_lag_m <- cbind(df_BTCTSLA_sub, df_BTCTSLA_lag)
+df_BTCTSLA_TDlag_m <- cbind(df_BTCTSLA_sub, df_BTCTSLA_TDlag)
 ```
 
 ```{r return_data, echo=TRUE, message=FALSE}
 # Bitcoin daily return
-BDReturn <- c(NA, diff(df_BTCTSLA_lag_m$BTC.USD.Close)/df_BTCTSLA_lag_m$BTC.USD.Close*100)
+BDReturn <- c(NA, diff(df_BTCTSLA_TDlag_m$BTC.USD.Close)/df_BTCTSLA_TDlag_m$BTC.USD.Close*100)
 BDReturn <- BDReturn[-length(BDReturn)]
-df_BTCTSLA_lag_m$BTC_Return <- BDReturn
+df_BTCTSLA_TDlag_m$BTC_Return <- BDReturn
 # TSLA daily return
-TDReturn <- c(NA, diff(df_BTCTSLA_lag_m$TSLA.Close)/df_BTCTSLA_lag_m$TSLA.Close*100)
+TDReturn <- c(NA, diff(df_BTCTSLA_TDlag_m$TSLA.Close)/df_BTCTSLA_TDlag_m$TSLA.Close*100)
 TDReturn <- TDReturn[-length(TDReturn)]
-df_BTCTSLA_lag_m$TSLA_Return <- TDReturn
+df_BTCTSLA_TDlag_m$TSLA_Return <- TDReturn
 ```
 
 ```{r lm_model_log, echo=TRUE, warning=FALSE}
 library(ggplot2)
 library(ggfortify)
 # Best result at 90 lag days -- log(y) ~ x
-x_value1 = df_BTCTSLA_lag_m$TSLA_lag_90
-y_value1 = log(df_BTCTSLA_lag_m$BTC.USD.Close)
-fit1 = lm(data = df_BTCTSLA_lag_m, y_value1 ~ x_value1)
+x_value1 = df_BTCTSLA_TDlag_m$TSLA_TDlag_90
+y_value1 = log(df_BTCTSLA_TDlag_m$BTC.USD.Close)
+fit1 = lm(data = df_BTCTSLA_TDlag_m, y_value1 ~ x_value1)
 summary(fit1)
-ggplot(df_BTCTSLA_lag_m, aes(x = x_value1, y = y_value1)) +
+ggplot(df_BTCTSLA_TDlag_m, aes(x = x_value1, y = y_value1)) +
   geom_point() +
-  xlab("TSLA 90 days lag") + 
+  xlab("TSLA 90 trading days lag") + 
   ylab("log(Bitcoin closing)") + 
   stat_smooth(method = 'lm', col = 'red') + 
   labs(title = paste("Adj R2=", signif(summary(fit1)$adj.r.squared, 5),
                      "Inc=", signif(fit1$coef[[1]], 5),
                      "Slp=", signif(fit1$coef[[2]], 5),
                      #"P=", signif(summary(fit1)$coef[2,4], 5),
-                     "RSE=", sigma(fit1)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)))
+                     "RSE=", sigma(fit1)/mean(df_BTCTSLA_TDlag_m$BTC.USD.Close, na.rm=TRUE)))
 ```
 ```{r lm_model_log_plots, echo=TRUE, warning=FALSE}
 autoplot(fit1)
@@ -171,31 +171,31 @@ autoplot(fit1)
 
 ```{r lm_model, echo=TRUE, warning=FALSE}
 # Best result at 60 days -- y ~ x
-x_value2 = df_BTCTSLA_lag_m$TSLA_lag_60
-y_value2 = df_BTCTSLA_lag_m$BTC.USD.Close
-fit2 = lm(data = df_BTCTSLA_lag_m, y_value2 ~ x_value2)
+x_value2 = df_BTCTSLA_TDlag_m$TSLA_TDlag_60
+y_value2 = df_BTCTSLA_TDlag_m$BTC.USD.Close
+fit2 = lm(data = df_BTCTSLA_TDlag_m, y_value2 ~ x_value2)
 summary(fit2)
-ggplot(df_BTCTSLA_lag_m, aes(x = x_value2, y = y_value2)) +
+ggplot(df_BTCTSLA_TDlag_m, aes(x = x_value2, y = y_value2)) +
   geom_point() +
-  xlab("TSLA 60 days lag") + 
+  xlab("TSLA 60 trading days lag") + 
   ylab("Bitcoin closing") + 
   stat_smooth(method = 'lm', col = 'red') + 
   labs(title = paste("Adj R2=", signif(summary(fit2)$adj.r.squared, 5),
                      "Inc=", signif(fit2$coef[[1]], 5),
                      "Slp=", signif(fit2$coef[[2]], 5),
                      #"P=", signif(summary(fit2)$coef[2,4], 5)
-                     "RSE=", sigma(fit2)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)))
+                     "RSE=", sigma(fit2)/mean(df_BTCTSLA_TDlag_m$BTC.USD.Close, na.rm=TRUE)))
 ```
 ```{r lm_model_plots, echo=TRUE, warning=FALSE}
 autoplot(fit2)
 ```
 
 ```{r lm_model_return, echo=TRUE, warning=FALSE}
-x_value3 = df_BTCTSLA_lag_m$TSLA_Return
-y_value3 = df_BTCTSLA_lag_m$BTC_Return
-fit3 = lm(data = df_BTCTSLA_lag_m, y_value3 ~ x_value3)
+x_value3 = df_BTCTSLA_TDlag_m$TSLA_Return
+y_value3 = df_BTCTSLA_TDlag_m$BTC_Return
+fit3 = lm(data = df_BTCTSLA_TDlag_m, y_value3 ~ x_value3)
 summary(fit3)
-ggplot(df_BTCTSLA_lag_m, aes(x = x_value3, y = y_value3)) +
+ggplot(df_BTCTSLA_TDlag_m, aes(x = x_value3, y = y_value3)) +
   geom_point() +
   xlab("TSLA return") + 
   ylab("Bitcoin return") + 
@@ -204,14 +204,14 @@ ggplot(df_BTCTSLA_lag_m, aes(x = x_value3, y = y_value3)) +
                      "Inc=", signif(fit3$coef[[1]], 5),
                      "Slp=", signif(fit3$coef[[2]], 5),
                      #"P=", signif(summary(fit3)$coef[2,4], 5),
-                     "RSE=", sigma(fit3)/mean(df_BTCTSLA_lag_m$BTC.USD.Close, na.rm=TRUE)))
+                     "RSE=", sigma(fit3)/mean(df_BTCTSLA_TDlag_m$BTC.USD.Close, na.rm=TRUE)))
 ```
 ```{r lm_model_return_plots, echo=TRUE, warning=FALSE}
 autoplot(fit3)
 ```
 ```{r correlation_matrix, warning=FALSE}
 library(corrplot)
-df_BTCTSLA_cor <- cor(subset(df_BTCTSLA_lag_m, select = -c(date)), use="pairwise.complete.obs")
+df_BTCTSLA_cor <- cor(subset(df_BTCTSLA_TDlag_m, select = -c(date)), use="pairwise.complete.obs")
 corrplot(df_BTCTSLA_cor, method="pie")
 corrplot(df_BTCTSLA_cor, method="number")
 ```
@@ -341,9 +341,9 @@ set.seed(2)
 trainset_indices <- sample(seq_len(nrow(df_port)), size = trainset_size)
 trainset <- df_port[trainset_indices, ]
 df_set <- df_port[-trainset_indices, ]
-test_indices <- sample(seq_len(nrow(df_set)), size = testset_size)
+testset_indices <- sample(seq_len(nrow(df_set)), size = testset_size)
 testset <- df_set[testset_indices, ]
-validationset <- df_set[-test_indices,]
+validationset <- df_set[-testset_indices,]
 ```
 
 ```{r SLR_TSLA_modelling}
@@ -361,8 +361,8 @@ summary(models)
 ```{r stepwise_caret}
 library(caret)
 train.control <- trainControl(method = "cv", number = 10)
-
-step.model <- train(BTC.USD.Close ~., data = na.omit(df_port),
+# use the data without volume
+step.model <- train(BTC.USD.Close ~., data = na.omit(df_port_price),
                     method = "leapBackward", 
                     tuneGrid = data.frame(nvmax = 1:5),
                     trControl = train.control
@@ -370,7 +370,7 @@ step.model <- train(BTC.USD.Close ~., data = na.omit(df_port),
 step.model$results
 summary(step.model$finalModel)
 #step.model$bestTune
-coef(step.model$finalModel, 5)
+coef(step.model$finalModel, 4)
 ```
 
 ```{r stepwise_MASS}
